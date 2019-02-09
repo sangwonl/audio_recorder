@@ -3,7 +3,21 @@ import 'dart:io';
 
 import 'package:file/local.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
+
+enum AudioEncoderFormat {
+  AAC,
+  AMR_WB,
+  LINEAR16
+}
+
+class Recording {
+  String path;                            // File path
+  String extension;                       // File extension
+  Duration duration;                      // Audio duration in milliseconds
+  AudioEncoderFormat audioEncoderFormat;  // Audio output format
+
+  Recording({this.duration, this.path, this.audioEncoderFormat, this.extension});
+}
 
 class AudioRecorder {
   static const MethodChannel _channel = const MethodChannel('audio_recorder');
@@ -11,48 +25,50 @@ class AudioRecorder {
   /// use [LocalFileSystem] to permit widget testing
   static LocalFileSystem fs = LocalFileSystem();
 
-  static Future start(
-      {String path, AudioOutputFormat audioOutputFormat}) async {
-    String extension;
-    if (path != null) {
-      if (audioOutputFormat != null) {
-        if (_convertStringInAudioOutputFormat(p.extension(path)) !=
-            audioOutputFormat) {
-          extension = _convertAudioOutputFormatInString(audioOutputFormat);
-          path += extension;
-        } else {
-          extension = p.extension(path);
-        }
-      } else {
-        if (_isAudioOutputFormat(p.extension(path))) {
-          extension = p.extension(path);
-        } else {
-          extension = ".m4a"; // default value
-          path += extension;
-        }
-      }
-      File file = fs.file(path);
+  static const EncodeFormatToExtensions = {
+    AudioEncoderFormat.AAC: ".m4a",
+    AudioEncoderFormat.AMR_WB: ".amr",
+    AudioEncoderFormat.LINEAR16: ".wav"
+  };
+
+  static _enumToString(AudioEncoderFormat fmt) {
+    return fmt.toString().split(".")[1];
+  }
+
+  static Future start({
+      String path,
+      AudioEncoderFormat audioEncoderFormat,
+      int sampleRate}) async {
+
+      String fullPath = path + EncodeFormatToExtensions[audioEncoderFormat];
+      File file = fs.file(fullPath);
       if (await file.exists()) {
-        throw new Exception("A file already exists at the path :" + path);
+        throw new Exception("A file already exists at the path :" + fullPath);
       } else if (!await file.parent.exists()) {
         throw new Exception("The specified parent directory does not exist");
       }
-    } else {
-      extension = ".m4a"; // default value
-    }
+
     return _channel
-        .invokeMethod('start', {"path": path, "extension": extension});
+      .invokeMethod('start', {
+        "path": fullPath,
+        "encoderFormat": _enumToString(audioEncoderFormat),
+        "sampleRate": sampleRate
+      });
   }
 
   static Future<Recording> stop() async {
     Map<String, Object> response =
-        Map.from(await _channel.invokeMethod('stop'));
+      Map.from(await _channel.invokeMethod('stop'));
+    
+    String encoderFormat = response['audioEncoderFormat'];
+    AudioEncoderFormat fmt = AudioEncoderFormat.values.firstWhere((e) => _enumToString(e) == encoderFormat);
+    
     Recording recording = new Recording(
-        duration: new Duration(milliseconds: response['duration']),
-        path: response['path'],
-        audioOutputFormat:
-            _convertStringInAudioOutputFormat(response['audioOutputFormat']),
-        extension: response['audioOutputFormat']);
+      duration: new Duration(milliseconds: response['duration']),
+      path: response['path'],
+      audioEncoderFormat: fmt,
+      extension: EncodeFormatToExtensions[fmt]
+    );
     return recording;
   }
 
@@ -65,53 +81,5 @@ class AudioRecorder {
     bool hasPermission = await _channel.invokeMethod('hasPermissions');
     return hasPermission;
   }
-
-  static AudioOutputFormat _convertStringInAudioOutputFormat(String extension) {
-    switch (extension) {
-      case ".mp4":
-      case ".aac":
-      case ".m4a":
-        return AudioOutputFormat.AAC;
-      default:
-        return null;
-    }
-  }
-
-  static bool _isAudioOutputFormat(String extension) {
-    switch (extension) {
-      case ".mp4":
-      case ".aac":
-      case ".m4a":
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  static String _convertAudioOutputFormatInString(
-      AudioOutputFormat outputFormat) {
-    switch (outputFormat) {
-      case AudioOutputFormat.AAC:
-        return ".m4a";
-      default:
-        return ".m4a";
-    }
-  }
 }
 
-enum AudioOutputFormat {
-  AAC,
-}
-
-class Recording {
-  // File path
-  String path;
-  // File extension
-  String extension;
-  // Audio duration in milliseconds
-  Duration duration;
-  // Audio output format
-  AudioOutputFormat audioOutputFormat;
-
-  Recording({this.duration, this.path, this.audioOutputFormat, this.extension});
-}

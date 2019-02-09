@@ -6,17 +6,17 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
-  - audio_recorder (from `/Users/jordan/audio_recorder/ios`)
-  - Flutter (from `/Users/jordan/flutter/bin/cache/artifacts/engine/ios`)
-  - path_provider (from `/Users/jordan/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/ios`)
+  - audio_recorder (from `/Users/eddylee/Develops/sangwonl/pineple/snack/flutter-plugins/audio_recorder/ios`)
+  - Flutter (from `/Users/eddylee/Develops/sdk/flutter/bin/cache/artifacts/engine/ios`)
+  - path_provider (from `/Users/eddylee/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/ios`)
 
 EXTERNAL SOURCES:
   audio_recorder:
-    :path: "/Users/jordan/audio_recorder/ios"
+    :path: "/Users/eddylee/Develops/sangwonl/pineple/snack/flutter-plugins/audio_recorder/ios"
   Flutter:
-    :path: "/Users/jordan/flutter/bin/cache/artifacts/engine/ios"
+    :path: "/Users/eddylee/Develops/sdk/flutter/bin/cache/artifacts/engine/ios"
   path_provider:
-    :path: "/Users/jordan/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/ios"
+    :path: "/Users/eddylee/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/ios"
 
 SPEC CHECKSUMS:
   audio_recorder: 964d124e1109fc012c47a98c3f5d843771a75db7

@@ -50,7 +50,7 @@ void main() {
   test('should start audio recorder', () async {
     await AudioRecorder.start(
       path: path,
-      audioOutputFormat: AudioOutputFormat.AAC,
+      audioEncoderFormat: AudioEncoderFormat.AAC,
     );
     expect(log, <Matcher>[
       isMethodCall(
@@ -125,7 +125,7 @@ void main() {
     final startAudioRecorder = () async {
       await AudioRecorder.start(
         path: path,
-        audioOutputFormat: AudioOutputFormat.AAC,
+        audioEncoderFormat: AudioEncoderFormat.AAC,
       );
     };
     expect(startAudioRecorder(), throwsA(isInstanceOf<Exception>()));
@@ -137,7 +137,7 @@ void main() {
     final startAudioRecorder = () async {
       await AudioRecorder.start(
         path: badPathParent,
-        audioOutputFormat: AudioOutputFormat.AAC,
+        audioEncoderFormat: AudioEncoderFormat.AAC,
       );
     };
     expect(startAudioRecorder(), throwsA(isInstanceOf<Exception>()));
@@ -149,14 +149,14 @@ void main() {
     expect(recording, isInstanceOf<Recording>());
     expect(recording.path, path);
     expect(recording.duration, Duration(milliseconds: duration));
-    expect(recording.audioOutputFormat, AudioOutputFormat.AAC);
+    expect(recording.audioEncoderFormat, AudioEncoderFormat.AAC);
     expect(isRecording, isFalse);
   });
 
   test('should check recording status', () async {
     await AudioRecorder.start(
       path: path,
-      audioOutputFormat: AudioOutputFormat.AAC,
+      audioEncoderFormat: AudioEncoderFormat.AAC,
     );
     expect(await AudioRecorder.isRecording, true);
 

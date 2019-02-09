@@ -69,13 +69,24 @@ class AppBodyState extends State<AppBody> {
                 ),
               ),
               new Text("File path of the record: ${_recording.path}"),
-              new Text("Format: ${_recording.audioOutputFormat}"),
+              new Text("Format: ${_recording.audioEncoderFormat}"),
               new Text("Extension : ${_recording.extension}"),
               new Text(
                   "Audio recording duration : ${_recording.duration.toString()}")
             ]),
       ),
     );
+  }
+
+  _encoderPerPlatform() {
+    TargetPlatform platform = Theme.of(context).platform;
+    switch (platform) {
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+        return AudioEncoderFormat.AMR_WB;
+      case TargetPlatform.iOS:
+        return AudioEncoderFormat.LINEAR16;
+    }
   }
 
   _start() async {
@@ -90,9 +101,15 @@ class AppBodyState extends State<AppBody> {
           }
           print("Start recording: $path");
           await AudioRecorder.start(
-              path: path, audioOutputFormat: AudioOutputFormat.AAC);
+            path: path,
+            audioEncoderFormat: _encoderPerPlatform(),
+            sampleRate: 16000
+          );
         } else {
-          await AudioRecorder.start();
+          await AudioRecorder.start(
+            audioEncoderFormat: _encoderPerPlatform(),
+            sampleRate: 16000
+          );
         }
         bool isRecording = await AudioRecorder.isRecording;
         setState(() {

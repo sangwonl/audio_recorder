@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.IOException;
@@ -28,7 +27,10 @@ public class AudioRecorderPlugin implements MethodCallHandler {
   private MediaRecorder mRecorder = null;
   private static String mFilePath = null;
   private Date startTime = null;
-  private String mExtension = "";
+  private String mEncoderFormat = null;
+  private Integer mOutputFormat = null;
+  private Integer mEncoderType = null;
+  private int mSampleRate = 0;
   /**
    * Plugin registration.
    */
@@ -46,16 +48,19 @@ public class AudioRecorderPlugin implements MethodCallHandler {
     switch (call.method) {
       case "start":
         Log.d(LOG_TAG, "Start");
-        String path = call.argument("path");
-        mExtension = call.argument("extension");
-        startTime = Calendar.getInstance().getTime();
-        if (path != null) {
-          mFilePath = path;
-        } else {
-          String fileName = String.valueOf(startTime.getTime());
-          mFilePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + fileName + mExtension;
+        mEncoderFormat = call.argument("encoderFormat");
+        mEncoderType = getAudioEncoderFromString(mEncoderFormat);
+        mOutputFormat = getOutputFormatFromString(mEncoderFormat);
+        if (mEncoderFormat == null || mOutputFormat == null) {
+          result.error("Not supported encoder format", null, null);
+          break;
         }
+
+        mSampleRate = call.argument("sampleRate");
+        mFilePath = call.argument("path");
         Log.d(LOG_TAG, mFilePath);
+
+        startTime = Calendar.getInstance().getTime();
         startRecording();
         isRecording = true;
         result.success(null);
@@ -69,7 +74,7 @@ public class AudioRecorderPlugin implements MethodCallHandler {
         HashMap<String, Object> recordingResult = new HashMap<>();
         recordingResult.put("duration", duration);
         recordingResult.put("path", mFilePath);
-        recordingResult.put("audioOutputFormat", mExtension);
+        recordingResult.put("audioEncoderFormat", mEncoderFormat);
         result.success(recordingResult);
         break;
       case "isRecording":
@@ -94,9 +99,10 @@ public class AudioRecorderPlugin implements MethodCallHandler {
   private void startRecording() {
     mRecorder = new MediaRecorder();
     mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-    mRecorder.setOutputFormat(getOutputFormatFromString(mExtension));
+    mRecorder.setOutputFormat(mOutputFormat);
     mRecorder.setOutputFile(mFilePath);
-    mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+    mRecorder.setAudioEncoder(mEncoderType);
+    mRecorder.setAudioSamplingRate(mSampleRate);
 
     try {
       mRecorder.prepare();
@@ -116,14 +122,23 @@ public class AudioRecorderPlugin implements MethodCallHandler {
     }
   }
 
-  private int getOutputFormatFromString(String outputFormat) {
-    switch (outputFormat) {
-      case ".mp4":
-      case ".aac":
-      case ".m4a":
+  private Integer getOutputFormatFromString(String fmt) {
+    switch (fmt) {
+      case "AAC":
         return MediaRecorder.OutputFormat.MPEG_4;
-      default:
-        return MediaRecorder.OutputFormat.MPEG_4;
+      case "AMR_WB":
+        return MediaRecorder.OutputFormat.AMR_WB;
     }
+    return null;
+  }
+
+  private Integer getAudioEncoderFromString(String fmt) {
+    switch (fmt) {
+      case "AAC":
+        return MediaRecorder.AudioEncoder.AAC;
+      case "AMR_WB":
+        return MediaRecorder.AudioEncoder.AMR_WB;
+    }
+    return null;
   }
 }
