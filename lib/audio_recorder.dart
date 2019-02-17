@@ -31,7 +31,7 @@ class AudioRecorder {
     AudioEncoderFormat.LINEAR16: ".wav"
   };
 
-  static _enumToString(AudioEncoderFormat fmt) {
+  static formatAsString(AudioEncoderFormat fmt) {
     return fmt.toString().split(".")[1];
   }
 
@@ -51,7 +51,7 @@ class AudioRecorder {
     return _channel
       .invokeMethod('start', {
         "path": fullPath,
-        "encoderFormat": _enumToString(audioEncoderFormat),
+        "encoderFormat": formatAsString(audioEncoderFormat),
         "sampleRate": sampleRate
       });
   }
@@ -59,10 +59,10 @@ class AudioRecorder {
   static Future<Recording> stop() async {
     Map<String, Object> response =
       Map.from(await _channel.invokeMethod('stop'));
-    
+
     String encoderFormat = response['audioEncoderFormat'];
-    AudioEncoderFormat fmt = AudioEncoderFormat.values.firstWhere((e) => _enumToString(e) == encoderFormat);
-    
+    AudioEncoderFormat fmt = AudioEncoderFormat.values.firstWhere((e) => formatAsString(e) == encoderFormat);
+
     Recording recording = new Recording(
       duration: new Duration(milliseconds: response['duration']),
       path: response['path'],
